@@ -9,7 +9,18 @@ class GomokuBoard(Board):
     )
 
     def __init__(self, initial_state=None):
-        Board.__init__(self, initial_state=None)
+        Board.__init__(self, initial_state)
+        # limit return of avial_moves to be within the boundaries to reduce search space
+        # (left, right, top, bottom)
+        if initial_state is None:
+            self._explore_boundaries = [float('inf'), float('-inf'), float('inf'), float('-inf')]
+
+    def update_state(self, move):
+        Board.update_state(self, move)
+        self._explore_boundaries[0] = min(self._explore_boundaries[0], move[0]-2)
+        self._explore_boundaries[1] = max(self._explore_boundaries[1], move[0]+2)
+        self._explore_boundaries[2] = min(self._explore_boundaries[2], move[1]-2)
+        self._explore_boundaries[3] = max(self._explore_boundaries[3], move[1]+2)
 
     def judge(self, state=None):
         """Only need to search if the last move forms a five in a line
@@ -33,10 +44,19 @@ class GomokuBoard(Board):
                 return self.last_player
         return None
 
+    def avial_moves(self):
+        empty_indices = self._empty_indices
+        filtered_empty_indices = [(i, j) for i, j in empty_indices if
+                                  (self._explore_boundaries[0] <= i <= self._explore_boundaries[1]) and
+                                  (self._explore_boundaries[2] <= j <= self._explore_boundaries[3])]
+        return filtered_empty_indices
+
 
 if __name__ == '__main__':
     import random
     import matplotlib.pyplot as plt
+    #fig = plt.figure()
+    #ax = fig.add_subplot(111)
     grid_size = 9
     g_board = GomokuBoard()
     g_board.update_state((grid_size//2, grid_size//2))
@@ -46,10 +66,9 @@ if __name__ == '__main__':
         next_move = random.choice(g_board.avial_moves())
         g_board.update_state(next_move)
         winner = g_board.judge()
-        #print g_board
+        print g_board
         #g_board.draw(ax)
-        #plt.pause(0.25)
-        #plt.clf()
+        #plt.pause(0.5)
 
     if winner == PLAYER_A:
         print 'Winner is PLAYER A'

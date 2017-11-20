@@ -1,4 +1,3 @@
-import copy
 import itertools
 
 import matplotlib.pyplot as plt
@@ -21,11 +20,7 @@ class Board(object):
         Initialized a 2d board with shape (num_rows, num_cols)
         :param initial_state: None|list, _board may not necessarily start empty but from a previous state.
         """
-        if isinstance(initial_state, Board):
-            self = copy.deepcopy(initial_state)
-            return
-        else:
-            self._board = [EMPTY] * (Board.num_rows * Board.num_cols)
+        self._board = [EMPTY] * (Board.num_rows * Board.num_cols)
         self._empty_indices = list(itertools.product(range(Board.num_rows), range(Board.num_cols)))
         self.num_stones = 0
         self.last_move = None
