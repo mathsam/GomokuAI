@@ -13,6 +13,7 @@ class MCUCT(object):
     """
     # when no simulation is performed, the number of simulation is set to this number instead of 0
     _LAPLACE_SMOOTHING = 1e-3
+    _LAPLACE_SMOOTHING_UPPER_BOUND = _LAPLACE_SMOOTHING + 1e-5 # Used for float number comparision
 
     def __init__(self, cached_depth=2, wall_time=60, C=1.414):
         """
@@ -30,15 +31,19 @@ class MCUCT(object):
         """
         curr_node = self.game_tree
         sim_path = []
-        while curr_node.next_boards:
+        for i in range(self.cached_depth):
             if curr_node.is_UCT_ready:
-                max_idx = curr_node.stats[:,2].argmax()
-                curr_node = curr_node.next_boards[max_idx]
-                sim_path.append(max_idx)
+                curr_node_idx = curr_node.stats[:, 2].argmax()
             else:
                 curr_node_idx = random.randrange(len(curr_node.next_boards))
-                curr_node = curr_node.next_boards[curr_node_idx]
-                sim_path.append(curr_node_idx)
+            sim_path.append(curr_node_idx)
+            child_node = curr_node.next_boards[curr_node_idx]
+            if isinstance(child_node, tuple):
+                child_node = deepcopy(curr_node)
+                child_node.update_state(curr_node.next_boards[curr_node_idx])
+                self._initialize_cached_tree(child_node)
+                curr_node.next_boards[curr_node_idx] = child_node
+            curr_node = child_node
             if curr_node.judge() is not None:
                 break
 
@@ -53,10 +58,11 @@ class MCUCT(object):
         curr_node = self.game_tree
         for level, node_idx in enumerate(sim_path):
             if not curr_node.is_UCT_ready:
-                if curr_node.stats[node_idx, 0] == 0:
+                if curr_node.stats[node_idx, 0] <= MCUCT._LAPLACE_SMOOTHING_UPPER_BOUND:
                     curr_node._num_stat_ready += 1
                     curr_node.is_UCT_ready = (curr_node._num_stat_ready == len(curr_node.next_boards))
-                    print 'Level %d ready' %(level+1)
+                    if curr_node.is_UCT_ready:
+                        print 'Level %d ready' %(level+1)
             curr_node._total_num_sim += 1
             curr_node.stats[node_idx, 0] += 1
             if result == TIE:
@@ -67,26 +73,15 @@ class MCUCT(object):
                 curr_node.stats[node_idx, 1]/curr_node.stats[node_idx, 0] +
                 self.C * np.sqrt(np.log(curr_node._total_num_sim) / curr_node.stats[node_idx, 0])
             )
+            curr_node = curr_node.next_boards[node_idx]
 
-    def _initialize_cached_tree(self, board, current_level=0):
-        if current_level == self.cached_depth:
-            board.next_boards = None
-            return
-        moves = board.avial_moves()
-        next_boards = []
-        for m in moves:
-            child = deepcopy(board)
-            child.update_state(m)
-            self._initialize_cached_tree(child, current_level+1)
-            next_boards.append(child)
-        board.next_boards = next_boards
-        # (total_simu_num, win_num, win_rate_upper_bound)
-        board.stats = np.zeros((len(next_boards), 3), dtype=np.float32)
-        board.stats[:, 0] = MCUCT._LAPLACE_SMOOTHING
-        board._num_stat_ready = 0  # how many number out of len(next_boards) has been simulated
-        board._total_num_sim = 0
-        board.is_UCT_ready = False  # if stats for all the next_boards are ready so that UCT can kick in
-        return
+    def _initialize_cached_tree(self, node):
+        node.next_boards = deepcopy(node.avial_moves())
+        node.stats = np.zeros((len(node.next_boards), 3), dtype=np.float32)
+        node.stats[:, 0] = MCUCT._LAPLACE_SMOOTHING
+        node._num_stat_ready = 0 # how many number of len(next_boards) has been simulated
+        node._total_num_sim = 0
+        node.is_UCT_ready = False # if all nodes have been simulated, UCT can kick in
 
     def best_move(self, board):
         self.current_player = board.current_player()
@@ -99,6 +94,7 @@ class MCUCT(object):
 
         winning_rate = self.game_tree.stats[:,1]/self.game_tree.stats[:,0]
         best_move_idx = winning_rate.argmax()
+        print self.game_tree.current_player()
         print 'Best move, total play: %f, win play: %f, win rate %f' %tuple(self.game_tree.stats[best_move_idx,:])
         print 'Total simulation %d' %self.game_tree._total_num_sim
         return self.game_tree.next_boards[best_move_idx].last_move

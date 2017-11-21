@@ -8,12 +8,11 @@ class GomokuBoard(Board):
         (0, 1), (1, 0), (1, 1), (1, -1),
     )
 
-    def __init__(self, initial_state=None):
-        Board.__init__(self, initial_state)
+    def __init__(self):
+        Board.__init__(self)
         # limit return of avial_moves to be within the boundaries to reduce search space
         # (left, right, top, bottom)
-        if initial_state is None:
-            self._explore_boundaries = [float('inf'), float('-inf'), float('inf'), float('-inf')]
+        self._explore_boundaries = [float('inf'), float('-inf'), float('inf'), float('-inf')]
 
     def update_state(self, move):
         Board.update_state(self, move)
@@ -22,7 +21,7 @@ class GomokuBoard(Board):
         self._explore_boundaries[2] = min(self._explore_boundaries[2], move[1]-2)
         self._explore_boundaries[3] = max(self._explore_boundaries[3], move[1]+2)
 
-    def judge(self, state=None):
+    def judge(self):
         """Only need to search if the last move forms a five in a line
         :param state: None(default)|str(serialized state)
         :return: Return the player that wins if exists, otherwise return None
@@ -41,6 +40,7 @@ class GomokuBoard(Board):
                     else:
                         break
             if max_stone_in_line >= 5:
+                self.judge = lambda : self.last_player
                 return self.last_player
         return None
 
