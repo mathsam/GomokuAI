@@ -10,16 +10,9 @@ class GomokuBoard(Board):
 
     def __init__(self):
         Board.__init__(self)
-        # limit return of avial_moves to be within the boundaries to reduce search space
-        # (left, right, top, bottom)
-        self._explore_boundaries = [float('inf'), float('-inf'), float('inf'), float('-inf')]
 
     def update_state(self, move):
         Board.update_state(self, move)
-        self._explore_boundaries[0] = min(self._explore_boundaries[0], move[0]-2)
-        self._explore_boundaries[1] = max(self._explore_boundaries[1], move[0]+2)
-        self._explore_boundaries[2] = min(self._explore_boundaries[2], move[1]-2)
-        self._explore_boundaries[3] = max(self._explore_boundaries[3], move[1]+2)
 
     def judge(self):
         """Only need to search if the last move forms a five in a line
@@ -43,13 +36,6 @@ class GomokuBoard(Board):
                 self.judge = lambda : self.last_player
                 return self.last_player
         return None
-
-    def avial_moves(self):
-        empty_indices = self._empty_indices
-        filtered_empty_indices = [(i, j) for i, j in empty_indices if
-                                  (self._explore_boundaries[0] <= i <= self._explore_boundaries[1]) and
-                                  (self._explore_boundaries[2] <= j <= self._explore_boundaries[3])]
-        return filtered_empty_indices
 
 
 if __name__ == '__main__':
