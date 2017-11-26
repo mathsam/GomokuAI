@@ -12,8 +12,8 @@ TIE = 3
 
 class Board(object):
 
-    num_rows = 9
-    num_cols = 9
+    num_rows = 11
+    num_cols = 11
 
     def __init__(self):
         """
