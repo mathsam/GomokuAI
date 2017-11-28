@@ -43,9 +43,9 @@ class TreeSearch(object):
         C = TreeSearch._params[uid]['C']
         root = TreeSearch._maintained_tree[uid]
         start_time = time.time()
-        while time.time() - start_time < 5:
+        while time.time() - start_time < 10:
             TreeSearch._explore(root, C)
-        return root.stats[:, 0:2] #.flatten()
+        return root.stats[:, 0].flatten()
 
     @staticmethod
     def _random_playout(node):
@@ -91,6 +91,7 @@ class TreeSearch(object):
                 C * np.sqrt(np.log(curr_node._total_num_sim) / curr_node.stats[node_idx, 0])
             )
             curr_node = curr_node.children[node_idx]
+        #curr_node._total_num_sim += 1
 
     @staticmethod
     def _initialize_tree_node(node):

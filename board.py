@@ -23,7 +23,6 @@ class Board(object):
         self._board = [EMPTY] * (Board.num_rows * Board.num_cols)
         self._empty_indices = list(itertools.product(range(Board.num_rows), range(Board.num_cols)))
         self.num_stones = 0
-        self.last_move = None
         self.last_player = None
         self.history = []
 
@@ -36,7 +35,6 @@ class Board(object):
             self[move] = PLAYER_A
         else:
             self[move] = PLAYER_B
-        self.last_move = move
         self.last_player = self.current_player()
         self.num_stones += 1
         self._empty_indices.remove(move)

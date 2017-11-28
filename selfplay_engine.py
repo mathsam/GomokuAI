@@ -5,7 +5,7 @@ from gomoku_board import GomokuBoard
 
 plt.ion()
 
-ai = MCUCT(GomokuBoard, min_num_sim=3e5)
+ai = MCUCT(GomokuBoard, C=0.25, min_num_sim=3e4)
 ai.update_state((5, 5))
 ax = ai.game_board.draw(None, 0.01)
 

@@ -10,11 +10,18 @@ class GomokuBoard(Board):
 
     def __init__(self):
         Board.__init__(self)
+        self.game_result = None
 
     def update_state(self, move):
         Board.update_state(self, move)
+        self.game_result = self._judge(move)
+        if self.game_result is not None:
+            self._empty_indices = []
 
     def judge(self):
+        return self.game_result
+
+    def _judge(self, move):
         """Only need to search if the last move forms a five in a line
         :param state: None(default)|str(serialized state)
         :return: Return the player that wins if exists, otherwise return None
@@ -26,8 +33,8 @@ class GomokuBoard(Board):
             max_stone_in_line = 1
             for sign in [-1, 1]:
                 for offset in xrange(1, 5):
-                    i = self.last_move[0] + dir[0]*offset*sign
-                    j = self.last_move[1] + dir[1]*offset*sign
+                    i = move[0] + dir[0]*offset*sign
+                    j = move[1] + dir[1]*offset*sign
                     if 0 <= i < Board.num_rows and 0 <= j < Board.num_cols and self[i, j] == last_color:
                         max_stone_in_line += 1
                     else:
