@@ -2,34 +2,55 @@ import Tkinter
 
 import numpy as np
 
-from board import PLAYER_A, PLAYER_B
+from board import PLAYER_A, PLAYER_B, TIE
 
 
 class BoardGameCanvas(Tkinter.Canvas):
 
-    def __init__(self, game_board, parent=None):
+    result_text = {
+        PLAYER_A: 'Player win',
+        PLAYER_B: 'AI win',
+        TIE: 'TIE',
+    }
+
+    def __init__(self, game_board, ai, parent=None):
         self._cellsize = 60
         self._width = self._cellsize * game_board.num_cols + 40
         self._height = self._cellsize * game_board.num_rows + 40
         Tkinter.Canvas.__init__(self, parent, width=self._width, height=self._height, bg='#F5CBA7')
         self.game_board = game_board
-
+        self.ai = ai
         self.pack()
         self.draw_grid()
         self.draw_stones()
-
         self.bind('<ButtonPress-1>', self.user_move)
 
     def user_move(self, event):
         x, y = self.canvasx(event.x), self.canvasy(event.y)
-        print x, y
         for j in range(len(self._col_grid)-1):
             if self._col_grid[j] < x < self._col_grid[j+1]:
                 for i in range(len(self._row_grid)-1):
                     if self._row_grid[i] < y < self._row_grid[i+1]:
                         self.game_board.update_state((i, j))
                         self._draw_one_stone(i, j)
-                        return
+                        winner = self.game_board.judge()
+                        if winner:
+                            self.create_text(self._width/2, self._height/2,
+                                             text=BoardGameCanvas.result_text[winner], font="Times 40 italic bold",
+                                             fill="blue")
+                            return
+
+                        self.ai.update_state((i, j))
+                        ai_move = self.ai.best_move()
+                        self.game_board.update_state(ai_move)
+                        self.ai.update_state(ai_move)
+                        self._draw_one_stone(*ai_move)
+                        winner = self.game_board.judge()
+                        if winner:
+                            self.create_text(self._width/2, self._height/2,
+                                             text=BoardGameCanvas.result_text[winner], font="Times 40 italic bold",
+                                             fill="blue")
+                            return
 
     def _draw_one_stone(self, row, col):
         stone_color = {PLAYER_A: 'black', PLAYER_B: 'white'}
@@ -38,6 +59,7 @@ class BoardGameCanvas(Tkinter.Canvas):
         x1 = self._col_grid[col+1] - self._cellsize*0.1
         y1 = self._row_grid[row+1] - self._cellsize*0.1
         self.create_oval(x0, y0, x1, y1, fill=stone_color[self.game_board[row, col]])
+        self.update_idletasks()
 
     def draw_stones(self):
         for row, col in self.game_board.history:
@@ -58,9 +80,9 @@ class BoardGameCanvas(Tkinter.Canvas):
 
 if __name__ == '__main__':
     top = Tkinter.Tk()
-    from gomoku_board import Board
-    gboard = Board()
-    gboard.update_state((4,5))
-    gboard.update_state((5,6))
-    app = BoardGameCanvas(gboard, top)
+    from gomoku_board import GomokuBoard
+    from ai import MCUCT
+    gboard = GomokuBoard()
+    ai = MCUCT(GomokuBoard)
+    app = BoardGameCanvas(gboard, ai, top)
     Tkinter.mainloop()
