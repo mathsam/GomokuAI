@@ -99,13 +99,13 @@ class AINet(object):
 
     def train(self, board_sample, move_sample, result_sample):
         batch_size = 256
-        for i in range(int(1e4)):
+        for i in range(int(1e6)):
             offset = (i * batch_size) % (board_sample.shape[0] - batch_size)
             board_batch = board_sample[offset:(offset + batch_size),...]
             move_batch = move_sample[offset:(offset + batch_size),...]
             result_batch = result_sample[offset:(offset + batch_size),...]
             _, loss_val = self.tf_session.run([training_op, loss], feed_dict={
-                board_state: board_batch, train_value: move_batch, train_value: result_batch})
+                board_state: board_batch, train_move: move_batch, train_value: result_batch})
             if i % 100 == 0:
                 print('step %d: loss %g' %(i, loss_val))
 
@@ -117,5 +117,16 @@ class AINet(object):
 
 
 if __name__ == '__main__':
-    ai_net = AINet('new')
+    import os
+    import pandas as pd
+    ai_net = AINet('restart')
+    X_train = pd.read_csv(os.path.join('analysis', 'X_train.csv'))
+    Y_train = pd.read_csv(os.path.join('analysis', 'Y_train.csv'))
+
+    board_sample = X_train.values.astype(np.float32)
+    board_sample = np.reshape(board_sample, [-1, input_height, input_width, 1])
+    move_sample = Y_train.iloc[:, :input_height*input_width].values.astype(np.float32)
+    result_sample = Y_train.loc[:, 'value'].values.astype(np.float32)
+
+    ai_net.train(board_sample, move_sample, result_sample)
     ai_net.save()
