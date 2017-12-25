@@ -11,7 +11,7 @@ class MCUCT(object):
     """
     _ai_uid = 0
 
-    def __init__(self, board_constructor, C=0.3, run_type='ipyparallel', min_num_sim=3e4):
+    def __init__(self, board_constructor, C=0.3, run_type='ipyparallel', min_num_sim=6e4):
         """
         The upper bound of the confidence is given by win_rate + C*sqrt(ln(n)/n_i)
         """
@@ -24,7 +24,7 @@ class MCUCT(object):
             TreeSearch.init_tree(self.uid, board_constructor, self.C)
         else:
             self._init_parallel_context(board_constructor)
-        MCUCT._ai_uid += 1
+        #MCUCT._ai_uid += 1
 
     def update_state(self, move):
         if self.run_type == 'ipyparallel':
@@ -75,6 +75,7 @@ class MCUCT(object):
                 print 'total sim', stats.sum()
                 break
         best_move_idx = stats.argmax()
+        self.game_stats = stats
         return avial_moves[best_move_idx]
 
     def _best_move_single(self):
@@ -83,6 +84,7 @@ class MCUCT(object):
             if stats.sum() > self.min_num_sim:
                 break
         best_move_idx = stats.argmax()
+        self.game_stats = stats
         return self.game_board.avial_moves()[best_move_idx]
 
     def __del__(self):
@@ -93,6 +95,6 @@ class MCUCT(object):
 if __name__ == '__main__':
 
     from gomoku_board import GomokuBoard
-    ai = MCUCT(GomokuBoard)
+    ai = MCUCT(GomokuBoard, min_num_sim=24e4)
     ai.update_state((4, 4))
     print ai.best_move()

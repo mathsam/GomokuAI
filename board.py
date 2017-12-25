@@ -5,15 +5,15 @@ import numpy as np
 
 EMPTY = 0
 PLAYER_A = 1  # black stone, first player to move
-PLAYER_B = 2
+PLAYER_B = -1
 
 TIE = 3
 
 
 class Board(object):
 
-    num_rows = 11
-    num_cols = 11
+    num_rows = 9
+    num_cols = 9
 
     def __init__(self):
         """

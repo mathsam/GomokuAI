@@ -43,7 +43,7 @@ class TreeSearch(object):
         C = TreeSearch._params[uid]['C']
         root = TreeSearch._maintained_tree[uid]
         start_time = time.time()
-        while time.time() - start_time < 10:
+        while time.time() - start_time < 4:
             TreeSearch._explore(root, C)
         return root.stats[:, 0].flatten()
 
