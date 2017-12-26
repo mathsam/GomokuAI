@@ -38,11 +38,14 @@ game_summary.to_csv(os.path.join('analysis', 'game_summary.csv'), index=False)
 
 train_test_split = int(0.8*len(X_df_list))
 
-def concat_and_shuffle(X, Y):
+
+def concat_and_shuffle(X, Y, sampling_window=5):
     """
     concat Dataframes in lists X and Y and shuffle indices in them
     :param X: list of DataFrame
     :param Y: list of DataFrame
+    :param skip_stride: pick one state out of every `sampling_window` states to avoid serial correlation between
+        states in order to reduce overfitting
     :return: (DataFrame, DataFrame)
     """
     X = pd.concat(X, axis=0).reset_index(drop=True)
@@ -51,14 +54,17 @@ def concat_and_shuffle(X, Y):
     X = X.multiply(Y['curr_player'], axis='index')
     assert(all(X.index == Y.index))
     shuffled_idx = np.array(X.index)
+    if sampling_window > 1:
+        shuffled_idx = shuffled_idx[::sampling_window]
+        print('Sampling window is %d' %sampling_window)
     np.random.shuffle(shuffled_idx)
     X = X.loc[shuffled_idx,:].reset_index(drop=True)
     Y = Y.loc[shuffled_idx,:].reset_index(drop=True)
     return X, Y
 
 
-X_train, Y_train = concat_and_shuffle(X_df_list[:train_test_split], Y_df_list[:train_test_split])
-X_test, Y_test = concat_and_shuffle(X_df_list[train_test_split:], Y_df_list[train_test_split:])
+X_train, Y_train = concat_and_shuffle(X_df_list[:train_test_split], Y_df_list[:train_test_split], sampling_window=1)
+X_test, Y_test = concat_and_shuffle(X_df_list[train_test_split:], Y_df_list[train_test_split:], sampling_window=1)
 
 X_train.to_csv(os.path.join('analysis', 'X_train.csv'), index=False)
 Y_train.to_csv(os.path.join('analysis', 'Y_train.csv'), index=False)

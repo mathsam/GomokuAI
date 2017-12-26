@@ -1,5 +1,8 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+
+from dnn_diagnostic import count_likely_moves
 
 input_height = 9
 input_width = 9
@@ -55,7 +58,7 @@ board_state = tf.placeholder(tf.float32, shape=[None, input_height, input_width,
 
 policy_and_value, network_params = q_network(board_state, name='value.policy.network')
 
-learning_rate = 0.001
+learning_rate = 1e-4
 momentum = 0.9
 
 with tf.variable_scope("train"):
@@ -75,9 +78,9 @@ with tf.variable_scope("train"):
     training_op = optimizer.minimize(loss, global_step=global_step)
 
 
-def softmax(array1d):
-    exp_array = np.exp(array1d)
-    return exp_array/np.sum(exp_array)
+def softmax(array_input):
+    exp_array = np.exp(array_input)
+    return exp_array/np.sum(exp_array, axis=-1)[...,np.newaxis]
 
 class AINet(object):
     checkpoint_path = './policy-value-network-chk'
@@ -96,10 +99,11 @@ class AINet(object):
 
     def save(self):
         self.saver.save(self.tf_session, self.checkpoint_path)
+        print('State saved')
 
     def train(self, board_sample, move_sample, result_sample):
-        batch_size = 256
-        for i in range(int(1e6)):
+        batch_size = 512
+        for i in range(int(1e5)):
             offset = (i * batch_size) % (board_sample.shape[0] - batch_size)
             board_batch = board_sample[offset:(offset + batch_size),...]
             move_batch = move_sample[offset:(offset + batch_size),...]
@@ -108,6 +112,9 @@ class AINet(object):
                 board_state: board_batch, train_move: move_batch, train_value: result_batch})
             if i % 100 == 0:
                 print('step %d: loss %g' %(i, loss_val))
+            if i % 1e4 == 0:
+                self.save()
+                print('\nsaved at step %d\n' %i)
 
     def pred(self, curr_board):
         p_and_val = policy_and_value.eval(feed_dict={board_state: [curr_board]}, session=self.tf_session).flatten()
@@ -115,10 +122,67 @@ class AINet(object):
         val = p_and_val[-1]
         return p, val
 
+    def pred_batch(self, board_states):
+        p_and_vals = policy_and_value.eval(feed_dict={board_state: board_states}, session=self.tf_session)
+        return p_and_vals
+
+    def eval_loss(self, board_sample, move_sample, result_sample):
+        loss_val = loss.eval(feed_dict={board_state: board_sample,
+                                        train_move: move_sample,
+                                        train_value: result_sample},
+                             session=self.tf_session)
+        return loss_val
+
+
+def produce_test_stats(X_test, Y_test):
+    if isinstance(X_test, pd.DataFrame):
+        X_test = X_test.values
+    if isinstance(Y_test, pd.DataFrame):
+        Y_test = Y_test.values
+
+    board_sample_test = X_test.astype(np.float32)
+    board_sample_test = np.reshape(board_sample_test, [-1, input_height, input_width, 1])
+    move_sample_test = Y_test[:,:input_height*input_width].astype(np.float32)
+    result_sample_test = Y_test[:,-1].astype(np.float32)
+
+    prediction = ai_net.pred_batch(board_sample_test)
+    test_loss = ai_net.eval_loss(board_sample_test, move_sample_test, result_sample_test)
+    print('Test loss: %f' %test_loss)
+
+    value_prediction = prediction[:, -1]
+    value_test = Y_test[:, -1]
+
+    value_precision = (np.sign(value_prediction) == np.sign(value_test)).sum() / float(len(value_test))
+    print('Value precision: %f' %value_precision)
+
+    move_prob = softmax(prediction[:, :-1])
+    pred_move = np.argmax(prediction[:, :-1], axis=1)
+    actual_move = np.argmax(Y_test[:, :-2], axis=1)
+
+    move_precision = (pred_move == actual_move).sum() / float(len(pred_move))
+    print('Move precision: %f' %move_precision)
+
+    top_k_move_precision = count_likely_moves(Y_test[:, :-2], move_prob)
+    print("Top 5 move precision: %f" %top_k_move_precision)
+
+    plt.figure()
+    plt.hist(value_prediction[value_test>0], normed=True, alpha=0.5)
+    plt.hist(value_prediction[value_test<0], normed=True, alpha=0.5)
+
+    plt.figure()
+    which_case = 19
+    plt.plot(move_prob[:100:10,:].T, 'r')
+    plt.plot(Y_test[:100:10,:-2].T, 'b')
+
+    plt.figure()
+    plt.scatter(np.log(move_prob.flatten()), np.log(Y_test[:,:-2].flatten()))
+
+
 
 if __name__ == '__main__':
     import os
     import pandas as pd
+
     ai_net = AINet('restart')
     X_train = pd.read_csv(os.path.join('analysis', 'X_train.csv'))
     Y_train = pd.read_csv(os.path.join('analysis', 'Y_train.csv'))
@@ -130,3 +194,10 @@ if __name__ == '__main__':
 
     ai_net.train(board_sample, move_sample, result_sample)
     ai_net.save()
+
+    produce_test_stats(X_train, Y_train)
+
+    X_test = pd.read_csv(os.path.join('analysis', 'X_test.csv'))
+    Y_test = pd.read_csv(os.path.join('analysis', 'Y_test.csv'))
+
+    produce_test_stats(X_test, Y_test)
