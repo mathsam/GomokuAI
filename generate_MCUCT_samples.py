@@ -6,12 +6,12 @@ from gomoku_board import GomokuBoard
 
 plt.ion()
 
-ax = None
+fig = plt.figure()
 
 while True:
     ai = MCUCT(GomokuBoard, C=0.3, min_num_sim=1e4, run_type='single')
     recorder = Recorder(ai, r'./selfplay_history')
-    ax = ai.game_board.draw(ax, pause_time=0.01)
+    ax = ai.game_board.draw(fig, pause_time=0.01)
 
     while ai.game_board.judge() is None:
         best_next_move = ai.best_move()
@@ -20,4 +20,4 @@ while True:
         ai.game_board.draw(ax, pause_time=0.001)
 
     recorder.record()
-    plt.clf()
+    fig.clear()

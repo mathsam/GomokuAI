@@ -1,5 +1,6 @@
 import itertools
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -60,15 +61,22 @@ class Board(object):
             start_idx = 0
         else:
             start_idx = len(self.history) - 1  # only need to draw last stone
+        if_new_ax = False
         if ax is None:
             fig = plt.figure()
             ax = fig.add_subplot(111)
+            if_new_ax = True
+        elif isinstance(ax, matplotlib.figure.Figure):
+            ax = ax.add_subplot(111)
+            if_new_ax = True
+        if if_new_ax:
             ax.set_xticks(range(1, Board.num_cols+1))
             ax.set_yticks(range(1, Board.num_rows+1))
             ax.grid('on')
             ax.set_xlim([0, Board.num_cols+1])
             ax.set_ylim([0, Board.num_rows+1])
             ax.set_aspect('equal')
+
         for t, move in enumerate(self.history[start_idx:], start_idx+1):
             y, x = move
             player = self[move]
