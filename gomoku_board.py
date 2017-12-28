@@ -12,6 +12,12 @@ class GomokuBoard(Board):
         Board.__init__(self)
         self.game_result = None
 
+    def copy(self):
+        new_board = Board.copy(self)
+        Board.copy(new_board)
+        setattr(new_board, 'game_result', self.game_result)
+        return new_board
+
     def update_state(self, move):
         Board.update_state(self, move)
         self.game_result = self._judge(move)

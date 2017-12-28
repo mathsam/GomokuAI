@@ -81,8 +81,8 @@ class BoardGameCanvas(Tkinter.Canvas):
 if __name__ == '__main__':
     top = Tkinter.Tk()
     from gomoku_board import GomokuBoard
-    from ai import MCUCT
+    from ai_dnn import MCUCT_DNN
     gboard = GomokuBoard()
-    ai = MCUCT(GomokuBoard)
+    ai = MCUCT_DNN(GomokuBoard)
     app = BoardGameCanvas(gboard, ai, top)
     Tkinter.mainloop()

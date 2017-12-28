@@ -1,3 +1,4 @@
+import copy
 import itertools
 
 import matplotlib
@@ -27,6 +28,13 @@ class Board(object):
         self.last_player = None
         self.history = []
 
+    def copy(self):
+        new_board = type(self)()
+        attribs = ['_board', '_empty_indices', 'num_stones', 'last_player', 'history']
+        for att in attribs:
+            setattr(new_board, att, copy.deepcopy(getattr(self, att)))
+        return new_board
+
     def update_state(self, move):
         """Add a stone to the board. The color of the stone is automatically determined
         :param move: tuple, (row_idx, col_idx)
@@ -41,10 +49,10 @@ class Board(object):
         self._empty_indices.remove(move)
         self.history.append(move)
 
-    def convert_into_2d_array(self):
+    def convert_into_2d_array(self, dtype=np.int8):
         """Convert the board into 2d numpy array"""
         return np.array([self._board[i*self.num_cols:(i+1)*self.num_cols] for i in range(self.num_rows)],
-                        dtype=np.int8)
+                        dtype=dtype)
 
     def current_player(self):
         """Return current player stored in this Board instance or decoded from input `state`

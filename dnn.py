@@ -12,7 +12,7 @@ conv_kernel_sizes = [(3,3), (3,3), (3,3)]
 conv_strides = [1, 1, 1]
 conv_paddings = ["SAME"] * 3
 conv_activation = [tf.nn.relu] * 3
-l2_regu_coef = 1e-4
+l2_regu_coef = 1e-1
 hidden_activation = tf.nn.relu
 n_outputs = input_height * input_width
 initializer = tf.contrib.layers.variance_scaling_initializer()
@@ -103,7 +103,7 @@ class AINet(object):
 
     def train(self, board_sample, move_sample, result_sample):
         batch_size = 512
-        for i in range(int(1e5)):
+        for i in range(int(5e4)):
             offset = (i * batch_size) % (board_sample.shape[0] - batch_size)
             board_batch = board_sample[offset:(offset + batch_size),...]
             move_batch = move_sample[offset:(offset + batch_size),...]
@@ -135,6 +135,7 @@ class AINet(object):
 
 
 def produce_test_stats(X_test, Y_test):
+    import scipy
     if isinstance(X_test, pd.DataFrame):
         X_test = X_test.values
     if isinstance(Y_test, pd.DataFrame):
@@ -175,7 +176,7 @@ def produce_test_stats(X_test, Y_test):
     plt.plot(Y_test[:100:10,:-2].T, 'b')
 
     plt.figure()
-    plt.scatter(np.log(move_prob.flatten()), np.log(Y_test[:,:-2].flatten()))
+    plt.scatter(scipy.special.logit(move_prob.flatten()), scipy.special.logit(Y_test[:,:-2].flatten()))
 
 
 
