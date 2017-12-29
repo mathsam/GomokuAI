@@ -13,7 +13,7 @@ class MCUCT_DNN(object):
     _params = {}
     _LAPLACE_SMOOTHING = 1.0
 
-    def __init__(self, board_constructor, C=0.5, min_num_sim=1):
+    def __init__(self, board_constructor, C=1, min_num_sim=2**12):
         self.dnn = AINet('restart')
         self.C = C
         self.min_num_sim = min_num_sim
@@ -63,12 +63,12 @@ class MCUCT_DNN(object):
             curr_node._total_num_sim += 1
             curr_node.stats[node_idx, 0] += 1
             if leaf_node.current_player() == curr_node.current_player():
-                curr_node.stats[node_idx, 1] += leaf_node.value
+                curr_node.stats[node_idx, 1] += 1+leaf_node.value
             else:
                 curr_node.stats[node_idx, 1] -= leaf_node.value
             curr_node.stats[:, 2] = (
                 curr_node.stats[:, 1] / curr_node.stats[:, 0] +
-                C * np.sqrt(curr_node._total_num_sim) / curr_node.stats[:, 0] * curr_node.prior_move_prob[node_idx]
+                C * np.sqrt(curr_node._total_num_sim) / curr_node.stats[:, 0] * curr_node.prior_move_prob[:]
             )
             curr_node = curr_node.children[node_idx]
 
