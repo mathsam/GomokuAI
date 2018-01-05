@@ -1,4 +1,5 @@
 import Tkinter
+import tkMessageBox
 
 import numpy as np
 
@@ -20,6 +21,12 @@ class BoardGameCanvas(Tkinter.Canvas):
         Tkinter.Canvas.__init__(self, parent, width=self._width, height=self._height, bg='#F5CBA7')
         self.game_board = game_board
         self.ai = ai
+
+        if not tkMessageBox.askyesno(title='Please choose', message='Do you want to play black stone?'):
+            ai_move = self.ai.best_move()
+            self.ai.update_state(ai_move)
+            self.game_board.update_state(ai_move)
+
         self.pack()
         self.draw_grid()
         self.draw_stones()
@@ -39,7 +46,7 @@ class BoardGameCanvas(Tkinter.Canvas):
                                              text=BoardGameCanvas.result_text[winner], font="Times 40 italic bold",
                                              fill="blue")
                             return
-
+                        #print 'User state: DNN value %f' %self.ai._maintained_tree.value
                         self.ai.update_state((i, j))
                         ai_move = self.ai.best_move()
                         self.game_board.update_state(ai_move)
@@ -82,7 +89,9 @@ if __name__ == '__main__':
     top = Tkinter.Tk()
     from gomoku_board import GomokuBoard
     from ai_dnn import MCUCT_DNN
+    #from ai import MCUCT
     gboard = GomokuBoard()
     ai = MCUCT_DNN(GomokuBoard)
+    #ai = MCUCT(GomokuBoard, min_num_sim=1e4)
     app = BoardGameCanvas(gboard, ai, top)
     Tkinter.mainloop()

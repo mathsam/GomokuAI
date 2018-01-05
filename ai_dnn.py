@@ -13,8 +13,8 @@ class MCUCT_DNN(object):
     _params = {}
     _LAPLACE_SMOOTHING = 1.0
 
-    def __init__(self, board_constructor, C=1, min_num_sim=2**12):
-        self.dnn = AINet('restart')
+    def __init__(self, board_constructor, C=10, min_num_sim=2**12):
+        self.dnn = AINet('restart', use_gpu=False)
         self.C = C
         self.min_num_sim = min_num_sim
         self._maintained_tree = board_constructor()
@@ -33,6 +33,8 @@ class MCUCT_DNN(object):
         for i in xrange(self.min_num_sim):
             self._explore()
         best_move_idx = self._maintained_tree.stats[:, 0].argmax()
+        print 'AI move: DNN value %f, MCTS value %f' %(self._maintained_tree.value,
+                                                       self._maintained_tree.stats[best_move_idx, 2])
         return self._maintained_tree.avial_moves()[best_move_idx]
 
     def _explore(self):
@@ -63,7 +65,7 @@ class MCUCT_DNN(object):
             curr_node._total_num_sim += 1
             curr_node.stats[node_idx, 0] += 1
             if leaf_node.current_player() == curr_node.current_player():
-                curr_node.stats[node_idx, 1] += 1+leaf_node.value
+                curr_node.stats[node_idx, 1] += leaf_node.value
             else:
                 curr_node.stats[node_idx, 1] -= leaf_node.value
             curr_node.stats[:, 2] = (

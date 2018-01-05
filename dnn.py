@@ -58,7 +58,7 @@ board_state = tf.placeholder(tf.float32, shape=[None, input_height, input_width,
 
 policy_and_value, network_params = q_network(board_state, name='value.policy.network')
 
-learning_rate = 1e-4
+learning_rate = 1e-5
 momentum = 0.9
 
 with tf.variable_scope("train"):
@@ -85,11 +85,16 @@ def softmax(array_input):
 class AINet(object):
     checkpoint_path = './policy-value-network-chk'
 
-    def __init__(self, start_type='restart'):
+    def __init__(self, start_type='restart', use_gpu=True):
         """
         :param start_type: 'new'|'restart'
         """
-        self.tf_session = tf.Session()
+        session_conf = None
+        if not use_gpu:
+            session_conf = tf.ConfigProto(
+                device_count={'CPU' : 1, 'GPU' : 0})
+
+        self.tf_session = tf.Session(config=session_conf)
         self.saver = tf.train.Saver()
         if start_type == 'new':
             init = tf.global_variables_initializer()
@@ -102,8 +107,8 @@ class AINet(object):
         print('State saved')
 
     def train(self, board_sample, move_sample, result_sample):
-        batch_size = 512
-        for i in range(int(5e4)):
+        batch_size = 1024
+        for i in range(int(5e6)):
             offset = (i * batch_size) % (board_sample.shape[0] - batch_size)
             board_batch = board_sample[offset:(offset + batch_size),...]
             move_batch = move_sample[offset:(offset + batch_size),...]
@@ -193,10 +198,10 @@ if __name__ == '__main__':
     move_sample = Y_train.iloc[:, :input_height*input_width].values.astype(np.float32)
     result_sample = Y_train.loc[:, 'value'].values.astype(np.float32)
 
-    ai_net.train(board_sample, move_sample, result_sample)
-    ai_net.save()
+    #ai_net.train(board_sample, move_sample, result_sample)
+    #ai_net.save()
 
-    produce_test_stats(X_train, Y_train)
+    produce_test_stats(X_train.loc[:5000,:], Y_train.loc[:5000,:])
 
     X_test = pd.read_csv(os.path.join('analysis', 'X_test.csv'))
     Y_test = pd.read_csv(os.path.join('analysis', 'Y_test.csv'))
