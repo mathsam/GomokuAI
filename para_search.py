@@ -12,7 +12,7 @@ class TreeSearch(object):
     # need to maintain context in each Python instance when run in parallel using ipyparallel
     _maintained_tree = {}
     _params = {}
-    _LAPLACE_SMOOTHING = 1e-1
+    _LAPLACE_SMOOTHING = 1.0
 
     @staticmethod
     def init_tree(uid, board_constructor, C):
@@ -86,9 +86,11 @@ class TreeSearch(object):
             curr_node.stats[node_idx, 0] += 1
             if result == curr_node.current_player():
                 curr_node.stats[node_idx, 1] += 1
-            curr_node.stats[node_idx, 2] = (
-                curr_node.stats[node_idx, 1]/curr_node.stats[node_idx, 0] +
-                C * np.sqrt(np.log(curr_node._total_num_sim) / curr_node.stats[node_idx, 0])
+            else:
+                curr_node.stats[node_idx, 1] -= 1
+            curr_node.stats[:, 2] = (
+                curr_node.stats[:, 1]/curr_node.stats[:, 0] +
+                C * np.sqrt(np.log(curr_node._total_num_sim) / curr_node.stats[:, 0])
             )
             curr_node = curr_node.children[node_idx]
         #curr_node._total_num_sim += 1
@@ -97,6 +99,6 @@ class TreeSearch(object):
     def _initialize_tree_node(node):
         node.children = deepcopy(node.avial_moves())
         node.stats = np.zeros((len(node.children), 3), dtype=np.float32) # (num_sim_this_node, num_win, upper_win_rate_bound)
-        node.stats[:, 0:2] = TreeSearch._LAPLACE_SMOOTHING
-        node.stats[:, 2] = np.random.uniform(1000, 10000, len(node.children))  # play unvisited move at least once and in a random order
+        node.stats[:, 0] = TreeSearch._LAPLACE_SMOOTHING
+        node.stats[:, 2] = 1000 #np.random.uniform(1000, 10000, len(node.children))  # play unvisited move at least once and in a random order
         node._total_num_sim = 0
