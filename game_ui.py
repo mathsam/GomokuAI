@@ -23,6 +23,9 @@ class BoardGameCanvas(Tkinter.Canvas):
         self.ai = ai
 
         if not tkMessageBox.askyesno(title='Please choose', message='Do you want to play black stone?'):
+            self.result_text[PLAYER_A], self.result_text[PLAYER_B] =  (self.result_text[PLAYER_B],
+                                                                       self.result_text[PLAYER_A])
+            self.user_move_first = False
             ai_move = self.ai.best_move()
             self.ai.update_state(ai_move)
             self.game_board.update_state(ai_move)

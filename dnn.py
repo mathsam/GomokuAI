@@ -58,7 +58,7 @@ board_state = tf.placeholder(tf.float32, shape=[None, input_height, input_width,
 
 policy_and_value, network_params = q_network(board_state, name='value.policy.network')
 
-learning_rate = 1e-5
+learning_rate = 1e-4
 momentum = 0.9
 
 with tf.variable_scope("train"):
@@ -82,10 +82,12 @@ def softmax(array_input):
     exp_array = np.exp(array_input)
     return exp_array/np.sum(exp_array, axis=-1)[...,np.newaxis]
 
-class AINet(object):
-    checkpoint_path = './policy-value-network-chk'
 
-    def __init__(self, start_type='restart', use_gpu=True):
+class AINet(object):
+
+    chkpoint_name = 'policy-value-network-chk'
+
+    def __init__(self, start_type='restart', load_path=r'./dnn_data/v0', save_path=None, use_gpu=True):
         """
         :param start_type: 'new'|'restart'
         """
@@ -96,19 +98,27 @@ class AINet(object):
 
         self.tf_session = tf.Session(config=session_conf)
         self.saver = tf.train.Saver()
+        self.load_path = load_path
+        if save_path is None:
+            self.save_path = load_path
+        else:
+            self.save_path = save_path
+        if not os.path.isdir(self.save_path):
+            os.mkdir(self.save_path)
+
         if start_type == 'new':
             init = tf.global_variables_initializer()
             init.run(session=self.tf_session)
         else:
-            self.saver.restore(self.tf_session, self.checkpoint_path)
+            self.saver.restore(self.tf_session, os.path.join(self.load_path, self.chkpoint_name))
 
     def save(self):
-        self.saver.save(self.tf_session, self.checkpoint_path)
-        print('State saved')
+        saved_dir = self.saver.save(self.tf_session, os.path.join(self.save_path, self.chkpoint_name))
+        print('State saved at: %s' %saved_dir)
 
     def train(self, board_sample, move_sample, result_sample):
         batch_size = 1024
-        for i in range(int(5e6)):
+        for i in range(int(1e5)):
             offset = (i * batch_size) % (board_sample.shape[0] - batch_size)
             board_batch = board_sample[offset:(offset + batch_size),...]
             move_batch = move_sample[offset:(offset + batch_size),...]
@@ -189,7 +199,8 @@ if __name__ == '__main__':
     import os
     import pandas as pd
 
-    ai_net = AINet('restart')
+    ai_net = AINet('restart', load_path=r'./dnn_data/v0', save_path=r'./dnn_data/v1')
+
     X_train = pd.read_csv(os.path.join('analysis', 'X_train.csv'))
     Y_train = pd.read_csv(os.path.join('analysis', 'Y_train.csv'))
 
@@ -198,8 +209,8 @@ if __name__ == '__main__':
     move_sample = Y_train.iloc[:, :input_height*input_width].values.astype(np.float32)
     result_sample = Y_train.loc[:, 'value'].values.astype(np.float32)
 
-    #ai_net.train(board_sample, move_sample, result_sample)
-    #ai_net.save()
+    ai_net.train(board_sample, move_sample, result_sample)
+    ai_net.save()
 
     produce_test_stats(X_train.loc[:5000,:], Y_train.loc[:5000,:])
 
