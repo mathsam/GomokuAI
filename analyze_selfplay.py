@@ -5,10 +5,20 @@ import re
 import numpy as np
 import pandas as pd
 
-data_dir = './selfplay_history'
+base_dir = r'./dnn_data'
+training_status = eval(open(os.path.join(base_dir, 'training_status')).read())
+data_dir = os.path.join(base_dir, 'selfplay', 'v%d' %training_status['current_champion'])
+print('Load selfplay from ' %data_dir)
+
 
 X_files = sorted(glob.glob(os.path.join(data_dir, 'X*.csv')))
 Y_files = sorted(glob.glob(os.path.join(data_dir, 'Y*.csv')))
+
+if len(X_files) < 2000:
+    print('Only has %d samples yet' %len(X_files))
+    exit()
+else:
+    print('Get %d number of games' %len(X_files))
 
 num_re = re.compile(r'\D+_(\d+)\.csv')
 
@@ -36,7 +46,7 @@ for df_X, df_Y in zip(X_df_list, Y_df_list):
 
 game_summary.to_csv(os.path.join('analysis', 'game_summary.csv'), index=False)
 
-train_test_split = int(0.8*len(X_df_list))
+#train_test_split = int(0.8*len(X_df_list))
 
 
 def concat_and_shuffle(X, Y, sampling_window=5):
@@ -63,10 +73,11 @@ def concat_and_shuffle(X, Y, sampling_window=5):
     return X, Y
 
 
-X_train, Y_train = concat_and_shuffle(X_df_list[:train_test_split], Y_df_list[:train_test_split], sampling_window=1)
-X_test, Y_test = concat_and_shuffle(X_df_list[train_test_split:], Y_df_list[train_test_split:], sampling_window=1)
+#X_train, Y_train = concat_and_shuffle(X_df_list[:train_test_split], Y_df_list[:train_test_split], sampling_window=1)
+#X_test, Y_test = concat_and_shuffle(X_df_list[train_test_split:], Y_df_list[train_test_split:], sampling_window=1)
+X_train, Y_train = concat_and_shuffle(X_df_list, Y_df_list, sampling_window=1)
 
-X_train.to_csv(os.path.join('analysis', 'X_train.csv'), index=False)
-Y_train.to_csv(os.path.join('analysis', 'Y_train.csv'), index=False)
-X_test.to_csv(os.path.join('analysis', 'X_test.csv'), index=False)
-Y_test.to_csv(os.path.join('analysis', 'Y_test.csv'), index=False)
+X_train.to_csv(os.path.join(base_dir, 'X_train.csv'), index=False)
+Y_train.to_csv(os.path.join(base_dir, 'Y_train.csv'), index=False)
+#X_test.to_csv(os.path.join(save_dir, 'X_test.csv'), index=False)
+#Y_test.to_csv(os.path.join(save_dir, 'Y_test.csv'), index=False)

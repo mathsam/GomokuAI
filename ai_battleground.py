@@ -1,31 +1,40 @@
 import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # use CPU only
 import random
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
-from ai import MCUCT
 from ai_dnn import MCUCT_DNN
 from board import PLAYER_A, TIE
 from gomoku_board import GomokuBoard
+import time
+print 'Battle start at ', time.ctime()
+start_time = time.time()
+
+base_dir = r'./dnn_data'
+training_status = eval(open(os.path.join(base_dir, 'training_status')).read())
+
+champion_model = os.path.join(base_dir, 'v%d' %training_status['current_champion'])
+challenger_model = os.path.join(base_dir, 'v%d' %training_status['current_challenger'])
 
 plt.ion()
 
-save_file = 'DNN_vs_PureMCTS.csv'
-if os.path.isfile(save_file):
-    game_record = pd.read_csv(save_file)
-else:
-    game_record = pd.DataFrame()
+save_file = os.path.join(base_dir,
+    'DNN%s_vs_DNN%s.csv' %(training_status['current_champion'], training_status['current_challenger']))
+game_record = pd.DataFrame()
 
 fig = plt.figure()
 
+TOTAL_GAMES = 100
+for game_i in range(TOTAL_GAMES):
+    print('\n\nPlaying game %d\n' %game_i)
 
-while True:
-
-    ai_pureMC = MCUCT(GomokuBoard, C=0.3, min_num_sim=1e4, run_type='single')
-    ai_dnn = MCUCT_DNN(GomokuBoard, min_num_sim=1e4)
-    two_players = [[ai_pureMC, 'pure MCTS'], [ai_dnn, 'DNN']]
-    first_player = random.randint(0, 1)
+    #ai_pureMC = MCUCT(GomokuBoard, C=0.3, min_num_sim=1e4, run_type='single')
+    ai_dnn0 = MCUCT_DNN(GomokuBoard, min_num_sim=2**10, load_path=champion_model, training_mode=True)
+    ai_dnn1 = MCUCT_DNN(GomokuBoard, min_num_sim=2**10, load_path=challenger_model, training_mode=True)
+    two_players = [[ai_dnn0, 'champion'], [ai_dnn1, 'challenger']]
+    #first_player = random.randint(0, 1)
+    first_player = game_i % 2
 
     game_board = GomokuBoard()
     ax = game_board.draw(fig, pause_time=0.01)
@@ -55,4 +64,25 @@ while True:
         game_record.loc[new_idx, 'winner'] = two_players[second_player][1]
 
     game_record.to_csv(save_file, index=False)
+    print game_record.groupby('winner').count()
     fig.clear()
+
+game_record['dummy'] = 1
+game_record.to_csv(save_file, index=False)
+print(game_record.groupby(['first_player', 'winner']).sum())
+
+challenger_winning_rate = (game_record['winner'] == 'challenger').sum() / float(TOTAL_GAMES)
+print('Challenger winning rate: %f' %challenger_winning_rate)
+
+if challenger_winning_rate > 0.65:
+    training_status['current_champion'] = training_status['current_challenger']
+    training_status['current_challenger'] += 1
+
+    with open(os.path.join(base_dir, 'training_status'), 'w') as f:
+        f.write(str(training_status))
+else:
+    print('Challenger fail')
+
+print 'Battle end at ', time.ctime()
+end_time = time.time()
+print 'Time consumed for battle ', end_time - start_time

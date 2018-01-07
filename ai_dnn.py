@@ -20,9 +20,10 @@ class MCUCT_DNN(object):
     _params = {}
     _LAPLACE_SMOOTHING = 1.0
 
-    def __init__(self, board_constructor, C=10, min_num_sim=2**12, training_mode=False):
+    def __init__(self, board_constructor, load_path=r'./dnn_data/champion/', C=10, min_num_sim=2**12,
+                 training_mode=False):
         min_num_sim = int(min_num_sim)
-        self.dnn = AINet('restart', use_gpu=False)
+        self.dnn = AINet('restart', load_path=load_path, use_gpu=False)
         self.C = C
         self.min_num_sim = min_num_sim
         self.game_board = board_constructor()

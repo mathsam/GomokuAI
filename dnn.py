@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-
+import os
 from dnn_diagnostic import count_likely_moves
 
 input_height = 9
@@ -186,7 +186,6 @@ def produce_test_stats(X_test, Y_test):
     plt.hist(value_prediction[value_test<0], normed=True, alpha=0.5)
 
     plt.figure()
-    which_case = 19
     plt.plot(move_prob[:100:10,:].T, 'r')
     plt.plot(Y_test[:100:10,:-2].T, 'b')
 
@@ -196,10 +195,21 @@ def produce_test_stats(X_test, Y_test):
 
 
 if __name__ == '__main__':
-    import os
     import pandas as pd
+    import time
+    print '\n---------------------Training Start-----------------------'
+    print 'Training start at ', time.ctime()
+    start_time = time.time()
 
-    ai_net = AINet('restart', load_path=r'./dnn_data/v0', save_path=r'./dnn_data/v1')
+    base_dir = r'./dnn_data'
+    training_status = eval(open(os.path.join(base_dir, 'training_status')).read())
+    save_path = os.path.join(base_dir, 'v%d' %training_status['current_challenger'])
+    if (not os.path.isdir(save_path)) or (not os.listdir(save_path)):
+        load_path = os.path.join(base_dir, 'v%d' %training_status['current_champion'])
+    else:
+        load_path = save_path
+
+    ai_net = AINet('restart', load_path=load_path, save_path=save_path)
 
     X_train = pd.read_csv(os.path.join('analysis', 'X_train.csv'))
     Y_train = pd.read_csv(os.path.join('analysis', 'Y_train.csv'))
@@ -212,9 +222,13 @@ if __name__ == '__main__':
     ai_net.train(board_sample, move_sample, result_sample)
     ai_net.save()
 
-    produce_test_stats(X_train.loc[:5000,:], Y_train.loc[:5000,:])
+    #produce_test_stats(X_train.loc[:5000,:], Y_train.loc[:5000,:])
+    #X_test = pd.read_csv(os.path.join('analysis', 'X_test.csv'))
+    #Y_test = pd.read_csv(os.path.join('analysis', 'Y_test.csv'))
+    #produce_test_stats(X_test, Y_test)
 
-    X_test = pd.read_csv(os.path.join('analysis', 'X_test.csv'))
-    Y_test = pd.read_csv(os.path.join('analysis', 'Y_test.csv'))
+    print 'Training end at ', time.ctime()
+    end_time = time.time()
+    print 'Time consumed for training ', end_time - start_time
+    print '---------------------Training End-----------------------\n'
 
-    produce_test_stats(X_test, Y_test)

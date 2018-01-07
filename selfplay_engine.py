@@ -1,15 +1,19 @@
 import matplotlib.pyplot as plt
 
-from ai import MCUCT
+#from ai import MCUCT
+from ai_dnn import MCUCT_DNN
 from gomoku_board import GomokuBoard
 
 plt.ion()
 
-ai = MCUCT(GomokuBoard, C=0.25, min_num_sim=3e4)
-ai.update_state((5, 5))
-ax = ai.game_board.draw(None, 0.01)
+#ai = MCUCT(GomokuBoard, C=0.3, min_num_sim=3e4)
+ai = MCUCT_DNN(GomokuBoard, min_num_sim=2**12)
+game_board = GomokuBoard()
 
-while ai.game_board.judge() is None:
+ax = None
+
+while game_board.judge() is None:
     best_next_move = ai.best_move()
     ai.update_state(best_next_move)
-    ai.game_board.draw(ax, 0.01)
+    game_board.update_state(best_next_move)
+    ax = game_board.draw(ax, 0.01)
