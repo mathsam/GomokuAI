@@ -15,6 +15,7 @@ class BoardGameCanvas(Tkinter.Canvas):
     }
 
     def __init__(self, game_board, ai, parent=None):
+        self.stone_num = 1
         self._cellsize = 60
         self._width = self._cellsize * game_board.num_cols + 40
         self._height = self._cellsize * game_board.num_rows + 40
@@ -34,6 +35,7 @@ class BoardGameCanvas(Tkinter.Canvas):
         self.draw_grid()
         self.draw_stones()
         self.bind('<ButtonPress-1>', self.user_move)
+
 
     def user_move(self, event):
         x, y = self.canvasx(event.x), self.canvasy(event.y)
@@ -64,11 +66,14 @@ class BoardGameCanvas(Tkinter.Canvas):
 
     def _draw_one_stone(self, row, col):
         stone_color = {PLAYER_A: 'black', PLAYER_B: 'white'}
+        text_color = {PLAYER_A: 'yellow', PLAYER_B: 'green'}
         x0 = self._col_grid[col] + self._cellsize*0.1
         y0 = self._row_grid[row] + self._cellsize*0.1
         x1 = self._col_grid[col+1] - self._cellsize*0.1
         y1 = self._row_grid[row+1] - self._cellsize*0.1
         self.create_oval(x0, y0, x1, y1, fill=stone_color[self.game_board[row, col]])
+        self.create_text((x0+x1)/2., (y0+y1)/2., text=str(self.stone_num), fill=text_color[self.game_board[row, col]])
+        self.stone_num += 1
         self.update_idletasks()
 
     def draw_stones(self):
@@ -94,7 +99,7 @@ if __name__ == '__main__':
     from ai_dnn import MCUCT_DNN
     #from ai import MCUCT
     gboard = GomokuBoard()
-    ai = MCUCT_DNN(GomokuBoard)
+    ai = MCUCT_DNN(GomokuBoard, load_path=r'./dnn_data/v1', min_num_sim=1e3)
     #ai = MCUCT(GomokuBoard, min_num_sim=1e4)
     app = BoardGameCanvas(gboard, ai, top)
     Tkinter.mainloop()
