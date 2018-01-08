@@ -1,6 +1,7 @@
 import glob
 import os
 import re
+import sys
 
 import numpy as np
 import pandas as pd
@@ -8,7 +9,7 @@ import pandas as pd
 base_dir = r'./dnn_data'
 training_status = eval(open(os.path.join(base_dir, 'training_status')).read())
 data_dir = os.path.join(base_dir, 'selfplay', 'v%d' %training_status['current_champion'])
-print('Load selfplay from ' %data_dir)
+print('Load selfplay from %s' %data_dir)
 
 
 X_files = sorted(glob.glob(os.path.join(data_dir, 'X*.csv')))
@@ -16,7 +17,8 @@ Y_files = sorted(glob.glob(os.path.join(data_dir, 'Y*.csv')))
 
 if len(X_files) < 2000:
     print('Only has %d samples yet' %len(X_files))
-    exit()
+    print('----------------EXIT-----------------\n')
+    sys.exit(1)
 else:
     print('Get %d number of games' %len(X_files))
 

@@ -1,6 +1,6 @@
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # use CPU only
-import random
+import sys
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -8,6 +8,11 @@ from ai_dnn import MCUCT_DNN
 from board import PLAYER_A, TIE
 from gomoku_board import GomokuBoard
 import time
+
+
+CUT_OFF = 0.57 # minimum winning rate to accept the challenger model
+
+
 print 'Battle start at ', time.ctime()
 start_time = time.time()
 
@@ -71,10 +76,11 @@ game_record['dummy'] = 1
 game_record.to_csv(save_file, index=False)
 print(game_record.groupby(['first_player', 'winner']).sum())
 
-challenger_winning_rate = (game_record['winner'] == 'challenger').sum() / float(TOTAL_GAMES)
+challenger_winning_rate = ((game_record['winner'] == 'challenger').sum() +
+                           0.5*(game_record['winner'] == 'TIE').sum()) / float(TOTAL_GAMES)
 print('Challenger winning rate: %f' %challenger_winning_rate)
 
-if challenger_winning_rate > 0.65:
+if challenger_winning_rate > CUT_OFF:
     training_status['current_champion'] = training_status['current_challenger']
     training_status['current_challenger'] += 1
 
@@ -86,3 +92,6 @@ else:
 print 'Battle end at ', time.ctime()
 end_time = time.time()
 print 'Time consumed for battle ', end_time - start_time
+
+if not challenger_winning_rate > CUT_OFF:
+    sys.exit(1)

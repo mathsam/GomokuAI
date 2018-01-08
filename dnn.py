@@ -1,7 +1,9 @@
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-import os
+
 from dnn_diagnostic import count_likely_moves
 
 input_height = 9
@@ -208,6 +210,8 @@ if __name__ == '__main__':
         load_path = os.path.join(base_dir, 'v%d' %training_status['current_champion'])
     else:
         load_path = save_path
+    print 'Load existing model from ', load_path
+    print 'Model will be saved at ', save_path
 
     ai_net = AINet('restart', load_path=load_path, save_path=save_path)
 
