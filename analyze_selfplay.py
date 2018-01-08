@@ -6,6 +6,10 @@ import sys
 import numpy as np
 import pandas as pd
 
+import time
+print '\n------------------ Generating Training Samples ----------------'
+print 'Start at ', time.ctime()
+
 base_dir = r'./dnn_data'
 training_status = eval(open(os.path.join(base_dir, 'training_status')).read())
 data_dir = os.path.join(base_dir, 'selfplay', 'v%d' %training_status['current_champion'])
@@ -15,7 +19,7 @@ print('Load selfplay from %s' %data_dir)
 X_files = sorted(glob.glob(os.path.join(data_dir, 'X*.csv')))
 Y_files = sorted(glob.glob(os.path.join(data_dir, 'Y*.csv')))
 
-if len(X_files) < 2000:
+if len(X_files) < 1900:
     print('Only has %d samples yet' %len(X_files))
     print('----------------EXIT-----------------\n')
     sys.exit(1)
@@ -83,3 +87,7 @@ X_train.to_csv(os.path.join(base_dir, 'X_train.csv'), index=False)
 Y_train.to_csv(os.path.join(base_dir, 'Y_train.csv'), index=False)
 #X_test.to_csv(os.path.join(save_dir, 'X_test.csv'), index=False)
 #Y_test.to_csv(os.path.join(save_dir, 'Y_test.csv'), index=False)
+
+
+print 'End at ', time.ctime()
+print('---------------- Training sample generated -----------------\n')
