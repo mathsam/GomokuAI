@@ -17,27 +17,33 @@ print('Load selfplay from %s' %data_dir)
 
 
 X_files = sorted(glob.glob(os.path.join(data_dir, 'X*.csv')))
-Y_files = sorted(glob.glob(os.path.join(data_dir, 'Y*.csv')))
 
-if len(X_files) < 1900:
+if len(X_files) < 1000:
     print('Only has %d samples yet' %len(X_files))
     print('----------------EXIT-----------------\n')
     sys.exit(1)
 else:
     print('Get %d number of games' %len(X_files))
 
+prev_version = training_status['current_champion'] - 1
+while len(X_files) < 5000:
+    if prev_version < -1:
+        break
+    data_dir = os.path.join(base_dir, 'selfplay', 'v%d' %prev_version)
+    print "Load sample from %s" %data_dir
+    X_files.extend(sorted(glob.glob(os.path.join(data_dir, 'X*.csv'))))
+    print('Get %d number of games in total' %len(X_files))
+    prev_version -= 1
+
 num_re = re.compile(r'\D+_(\d+)\.csv')
 
 X_df_list = []
 Y_df_list = []
 
-for fx, fy in zip(X_files, Y_files):
+for fx in X_files:
     xname = fx.split(r'/')[-1]
-    yname = fy.split(r'/')[-1]
-
     xnum = num_re.search(xname).group(1)
-    ynum = num_re.search(yname).group(1)
-    assert(xnum == ynum)
+    fy = os.path.join(os.path.dirname(fx), 'Y_%s.csv' %xnum)
 
     X_df_list.append(pd.read_csv(fx))
     Y_df_list.append(pd.read_csv(fy))

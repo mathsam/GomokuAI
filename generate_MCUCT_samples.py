@@ -17,7 +17,7 @@ while True:
     save_dir = os.path.join(base_dir, 'selfplay', 'v%d' %training_status['current_champion'])
 
     if not os.path.isdir(save_dir):
-        os.mkdir(save_dir)
+        os.makedirs(save_dir)
 
     print('\n\nLoad champion model from %s' %champion_model)
     ai = MCUCT_DNN(GomokuBoard, training_mode=True, min_num_sim=2**10, load_path=champion_model)

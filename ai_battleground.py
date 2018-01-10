@@ -2,7 +2,6 @@ import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # use CPU only
 import sys
 
-import matplotlib.pyplot as plt
 import pandas as pd
 from ai_dnn import MCUCT_DNN
 from board import PLAYER_A, TIE
@@ -11,8 +10,13 @@ import time
 
 
 CUT_OFF = 0.57 # minimum winning rate to accept the challenger model
+if os.environ.get('DISPLAY', '') == '':
+    SHOW_LIVE_GAME = False
+else:
+    SHOW_LIVE_GAME = True
+    import matplotlib.pyplot as plt
 
-
+print '\n--------- Battle starting -----------'
 print 'Battle start at ', time.ctime()
 start_time = time.time()
 
@@ -21,14 +25,17 @@ training_status = eval(open(os.path.join(base_dir, 'training_status')).read())
 
 champion_model = os.path.join(base_dir, 'v%d' %training_status['current_champion'])
 challenger_model = os.path.join(base_dir, 'v%d' %training_status['current_challenger'])
+print 'champion model ', champion_model
+print 'challenger model ', challenger_model
 
-plt.ion()
+if SHOW_LIVE_GAME:
+    plt.ion()
+    fig = plt.figure()
 
 save_file = os.path.join(base_dir,
     'DNN%s_vs_DNN%s.csv' %(training_status['current_champion'], training_status['current_challenger']))
 game_record = pd.DataFrame()
-
-fig = plt.figure()
+ 
 
 TOTAL_GAMES = 100
 for game_i in range(TOTAL_GAMES):
@@ -42,7 +49,8 @@ for game_i in range(TOTAL_GAMES):
     first_player = game_i % 2
 
     game_board = GomokuBoard()
-    ax = game_board.draw(fig, pause_time=0.01)
+    if SHOW_LIVE_GAME:
+        ax = game_board.draw(fig, pause_time=0.01)
 
     curr_player_idx = first_player
     print('First player %s' %two_players[curr_player_idx][1])
@@ -52,7 +60,8 @@ for game_i in range(TOTAL_GAMES):
         for ai, _ in two_players:
             ai.update_state(best_move)
         game_board.update_state(best_move)
-        ax = game_board.draw(ax, pause_time=0.01)
+        if SHOW_LIVE_GAME:
+            ax = game_board.draw(ax, pause_time=0.01)
 
     new_idx = len(game_record)
     game_record.loc[new_idx, 'first_player'] = two_players[first_player][1] 
@@ -70,7 +79,8 @@ for game_i in range(TOTAL_GAMES):
 
     game_record.to_csv(save_file, index=False)
     print game_record.groupby('winner').count()
-    fig.clear()
+    if SHOW_LIVE_GAME:
+        fig.clear()
 
 game_record['dummy'] = 1
 game_record.to_csv(save_file, index=False)
