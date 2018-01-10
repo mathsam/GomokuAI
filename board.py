@@ -1,4 +1,3 @@
-import copy
 import itertools
 
 import matplotlib
@@ -30,9 +29,11 @@ class Board(object):
 
     def copy(self):
         new_board = type(self)()
-        attribs = ['_board', '_empty_indices', 'num_stones', 'last_player', 'history']
-        for att in attribs:
-            setattr(new_board, att, copy.deepcopy(getattr(self, att)))
+        new_board._board = list(self._board)
+        new_board._empty_indices = list(self._empty_indices)
+        new_board.num_stones = self.num_stones
+        new_board.last_player = self.last_player
+        new_board.history = list(self.history)
         return new_board
 
     def update_state(self, move):

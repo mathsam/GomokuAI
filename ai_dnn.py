@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 import numpy as np
 from numpy.random import choice
 
@@ -106,7 +104,7 @@ class MCUCT_DNN(object):
             curr_node = curr_node.children[node_idx]
 
     def _initialize_tree_node(self, node):
-        node.children = deepcopy(node.avial_moves())
+        node.children = list(node.avial_moves())
         if node.judge() is not None:
             if node.judge() == TIE:
                 node.value = 0
