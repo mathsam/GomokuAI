@@ -2,11 +2,11 @@ import glob
 import os
 import re
 import sys
+import time
 
 import numpy as np
 import pandas as pd
 
-import time
 print '\n------------------ Generating Training Samples ----------------'
 print 'Start at ', time.ctime()
 
@@ -26,7 +26,7 @@ else:
     print('Get %d number of games' %len(X_files))
 
 prev_version = training_status['current_champion'] - 1
-while len(X_files) < 5000:
+while len(X_files) < 12000:
     if prev_version < -1:
         break
     data_dir = os.path.join(base_dir, 'selfplay', 'v%d' %prev_version)

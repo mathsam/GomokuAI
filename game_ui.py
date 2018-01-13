@@ -94,12 +94,16 @@ class BoardGameCanvas(Tkinter.Canvas):
 
 
 if __name__ == '__main__':
-    top = Tkinter.Tk()
+    import os
     from gomoku_board import GomokuBoard
     from ai_dnn import MCUCT_DNN
+    top = Tkinter.Tk()
     #from ai import MCUCT
     gboard = GomokuBoard()
-    ai = MCUCT_DNN(GomokuBoard, load_path=r'./dnn_data/v1', min_num_sim=1e3)
+    base_dir = r'./dnn_data'
+    training_status = eval(open(os.path.join(base_dir, 'training_status')).read())
+    champion_model = os.path.join(base_dir, 'v%d' %training_status['current_champion'])
+    ai = MCUCT_DNN(GomokuBoard, load_path=r'./dnn_data/v6', min_num_sim=2**13)
     #ai = MCUCT(GomokuBoard, min_num_sim=1e4)
     app = BoardGameCanvas(gboard, ai, top)
     Tkinter.mainloop()
