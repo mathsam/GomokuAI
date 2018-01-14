@@ -6,7 +6,7 @@ import pandas as pd
 import statsmodels.api as sm
 
 data_dir = r'./dnn_data'
-TOTAL_NUM_VERSIONS = 9
+TOTAL_NUM_VERSIONS = 10
 
 XY = pd.DataFrame()
 
@@ -21,8 +21,10 @@ for v in range(0, TOTAL_NUM_VERSIONS):
         game_num = len(XY)
         if game_result.loc[i, 'winner'] == 'challenger':
             XY.loc[game_num, 'is_challenger_win'] = True
-        else:
+        elif game_result.loc[i, 'winner'] == 'champion':
             XY.loc[game_num, 'is_challenger_win'] = False
+        else:
+            continue
 
         if game_result.loc[i, 'first_player'] == 'challenger':
             XY.loc[game_num, 'is_challenger_first'] = 1
