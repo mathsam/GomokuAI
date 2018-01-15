@@ -1,0 +1,2 @@
+model_checkpoint_path: "policy-value-network-chk"
+all_model_checkpoint_paths: "policy-value-network-chk"

@@ -26,7 +26,7 @@ else:
     print('Get %d number of games' %len(X_files))
 
 prev_version = training_status['current_champion'] - 1
-while len(X_files) < 15000:
+while len(X_files) < 18000:
     if prev_version < -1:
         break
     data_dir = os.path.join(base_dir, 'selfplay', 'v%d' %prev_version)
