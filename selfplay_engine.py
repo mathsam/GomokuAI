@@ -7,7 +7,7 @@ from gomoku_board import GomokuBoard
 plt.ion()
 
 #ai = MCUCT(GomokuBoard, C=0.3, min_num_sim=3e4)
-ai = MCUCT_DNN(GomokuBoard, min_num_sim=2**12)
+ai = MCUCT_DNN(GomokuBoard, min_num_sim=2**10, load_path=r'./dnn_data/v1', training_mode=True)
 game_board = GomokuBoard()
 
 ax = None
@@ -16,4 +16,4 @@ while game_board.judge() is None:
     best_next_move = ai.best_move()
     ai.update_state(best_next_move)
     game_board.update_state(best_next_move)
-    ax = game_board.draw(ax, 0.01)
+    ax = game_board.draw(ax, 1)

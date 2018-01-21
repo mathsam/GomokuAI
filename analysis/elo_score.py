@@ -6,7 +6,7 @@ import pandas as pd
 import statsmodels.api as sm
 
 data_dir = r'./dnn_data'
-TOTAL_NUM_VERSIONS = 10
+TOTAL_NUM_VERSIONS = 13
 
 XY = pd.DataFrame()
 

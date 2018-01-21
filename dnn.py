@@ -14,7 +14,7 @@ conv_kernel_sizes = [(3,3), (3,3), (3,3)]
 conv_strides = [1, 1, 1]
 conv_paddings = ["SAME"] * 3
 conv_activation = [tf.nn.relu] * 3
-l2_regu_coef = 1e-2
+l2_regu_coef = 2e-2
 hidden_activation = tf.nn.relu
 n_outputs = input_height * input_width
 initializer = tf.contrib.layers.variance_scaling_initializer()
@@ -210,6 +210,7 @@ if __name__ == '__main__':
         load_path = os.path.join(base_dir, 'v%d' %training_status['current_champion'])
     else:
         load_path = save_path
+
     print 'Load existing model from ', load_path
     print 'Model will be saved at ', save_path
 

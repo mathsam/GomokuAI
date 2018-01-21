@@ -103,7 +103,7 @@ if __name__ == '__main__':
     base_dir = r'./dnn_data'
     training_status = eval(open(os.path.join(base_dir, 'training_status')).read())
     champion_model = os.path.join(base_dir, 'v%d' %training_status['current_champion'])
-    ai = MCUCT_DNN(GomokuBoard, load_path=champion_model, min_num_sim=1)
+    ai = MCUCT_DNN(GomokuBoard, load_path=champion_model, min_num_sim=2**10)
     #ai = MCUCT(GomokuBoard, min_num_sim=1e4)
     app = BoardGameCanvas(gboard, ai, top)
     Tkinter.mainloop()
